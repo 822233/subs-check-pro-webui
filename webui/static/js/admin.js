@@ -2663,7 +2663,7 @@ import { initQuickPreview } from './cfg-quickpreview.js';
             configured.search || configured.hash) {
           throw new Error('Sub-Store 公网入口格式无效');
         }
-        const basePath = configured.pathname.replace(/\\/+$/, '');
+        const basePath = configured.pathname.replace(/\/+$/, '');
         const requestPath = String(path || '');
         const normalizedPath = requestPath
           ? (requestPath.startsWith('/') ? requestPath : '/' + requestPath)
