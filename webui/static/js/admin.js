@@ -2501,7 +2501,7 @@ import { initQuickPreview } from './cfg-quickpreview.js';
               configured.search || configured.hash) {
             throw new Error('Sub-Store 公网入口格式无效');
           }
-          baseUrl = configured.origin + configured.pathname.replace(/\\/+$/, '');
+          baseUrl = configured.origin + configured.pathname.replace(/\/+$/, '');
         } catch (error) {
           console.warn('Sub-Store 公网入口配置无效，回退自动探测地址：', error);
           baseUrl = fallbackBaseUrl;
