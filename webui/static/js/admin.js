@@ -2652,6 +2652,28 @@ import { initQuickPreview } from './cfg-quickpreview.js';
       return `${base}${path}`;
     }
 
+    // 自定义公网入口必须同时用于订阅分享链接，避免再次回退到自动探测域名。
+    // Wails 桌面端在上方已优先返回本地服务地址，不受此配置影响。
+    const configuredPublicUrl = String(window.__scp_subStorePublicUrl || '').trim();
+    if (configuredPublicUrl) {
+      try {
+        const configured = new URL(configuredPublicUrl);
+        if (!['http:', 'https:'].includes(configured.protocol) ||
+            !configured.host || configured.username || configured.password ||
+            configured.search || configured.hash) {
+          throw new Error('Sub-Store 公网入口格式无效');
+        }
+        const basePath = configured.pathname.replace(/\/+$/, '');
+        const requestPath = String(path || '');
+        const normalizedPath = requestPath
+          ? (requestPath.startsWith('/') ? requestPath : '/' + requestPath)
+          : '';
+        return configured.origin + basePath + normalizedPath;
+      } catch (error) {
+        console.warn('Sub-Store 公网入口配置无效，分享链接回退自动探测：', error);
+      }
+    }
+
     const protocol = window.location.protocol;
     const hostname = window.location.hostname;
     const parts = hostname.split('.');
