@@ -2450,6 +2450,10 @@ import { initQuickPreview } from './cfg-quickpreview.js';
 
   // ==================== Sub-Store & Share ====================
 
+  // 仅为指定公网部署固定 Sub-Store 入口；其他域名继续使用原有自动探测。
+  const CUSTOM_SUBSTORE_HOST = 'cheap-host1.cheapyun.com';
+  const CUSTOM_SUBSTORE_BASE_URL = 'http://cheap-host1.cheapyun.com:18299';
+
   /**
    * RFC 域名规范提醒：
    * sub_store_for_subs_check 不符合 RFC 1035 / RFC 1123（域名不能包含下划线 `_`）。
@@ -2489,8 +2493,13 @@ import { initQuickPreview } from './cfg-quickpreview.js';
 
       // 局域网访问(local)：自动带上后台传来的 cleanPort 端口
       // 公网访问(ok/legacy/warn)：CF Tunnel 代理，不加端口
-      const portToAdd = (status === 'local' && cleanPort) ? `:${cleanPort}` : '';
-      baseUrl = window.location.protocol + '//' + targetHost + portToAdd;
+      // 指定公网域名使用固定的 Sub-Store 公网端口；其他域名保持原有规则。
+      if (window.location.hostname === CUSTOM_SUBSTORE_HOST || status === 'custom') {
+        baseUrl = CUSTOM_SUBSTORE_BASE_URL;
+      } else {
+        const portToAdd = (status === 'local' && cleanPort) ? `:${cleanPort}` : '';
+        baseUrl = window.location.protocol + '//' + targetHost + portToAdd;
+      }
     }
 
     const lastPath = sessionStorage.getItem("scp_lastSubStorePath");
@@ -2636,6 +2645,15 @@ import { initQuickPreview } from './cfg-quickpreview.js';
 
     const protocol = window.location.protocol;
     const hostname = window.location.hostname;
+
+    // 指定公网域名直接使用已验证可访问的 Sub-Store NAT 入口，不探测 Cloudflare 子域名。
+    if (hostname === CUSTOM_SUBSTORE_HOST) {
+      getBaseUrl._cachedHostname = CUSTOM_SUBSTORE_HOST;
+      getBaseUrl._routeStatus = { status: 'custom', path, port };
+      getBaseUrl._cacheExpire = Infinity;
+      return `${CUSTOM_SUBSTORE_BASE_URL}${path}`;
+    }
+
     const parts = hostname.split('.');
 
     // 局域网特征识别
